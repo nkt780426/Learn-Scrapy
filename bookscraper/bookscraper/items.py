@@ -5,9 +5,9 @@
 
 import scrapy
 
-# Đơn giản thì làm thế nào, phức tạp hơn dùng file pipelines.py
-def serialize_price(value):
-    return f'$ {str(value)}'
+# # Đơn giản thì làm thế nào, phức tạp hơn dùng file pipelines.py
+# def serialize_price(value):
+#     return f'$ {str(value)}'
 
 
 class BookItem(scrapy.Item):
@@ -15,7 +15,8 @@ class BookItem(scrapy.Item):
     title = scrapy.Field()
     upc = scrapy.Field()
     product_type = scrapy.Field()
-    price_excl_tax = scrapy.Field(serializer = serialize_price)
+    # price_excl_tax = scrapy.Field(serializer = serialize_price)
+    price_excl_tax = scrapy.Field()
     price_incl_tax = scrapy.Field()
     tax = scrapy.Field()
     availability = scrapy.Field()
