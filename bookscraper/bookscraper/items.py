@@ -5,7 +5,7 @@
 
 import scrapy
 
-# # Đơn giản thì làm thế nào, phức tạp hơn dùng file pipelines.py
+# # Có thể tiền xử lý dữ liệu ở đây, nếu nó đơn giản, phức tạp hơn thì khai báo function trong file pipelines
 # def serialize_price(value):
 #     return f'$ {str(value)}'
 

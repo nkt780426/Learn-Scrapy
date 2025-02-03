@@ -49,11 +49,29 @@ Có 2 loại middlewares: downloader middlewares (thường hay được sử d�
     Data feed: Dòng dữ liệu được cung cấp từ một hệ thống (như api hoặc db) cho ứng dụng khác
     Feed Export: Nơi dữ liệu được xuất ra (export). Trong scrapy hỗ trợ feed export ra nhiều loại như json, csv, ...
 
-2.site = website
+2. site = website
+
 # Tạo spider
 cd bookscraper
 scrapy genspider bookspider books.toscrape.com
 
 Truy cập vào scrapy shell bằng lệnh scrapy shell (có thể thay shell mặc định bằng ipython - nhân jupyter)
 
-49:55
+# Lệnh
+1. scrapy list: liệt kê các spider
+2. scrapy crawl <tên spider>: chạy 1 con nhện
+    option lưu dữ liệu: 
+    - thêm -O <tên file><extention> để lưu dữ liệu vào 1 file nào đó, sẽ ghi đè nếu file đã tồn tại
+    - thêm -o <tên file><extention> tác dụng tương tự nhưng append vào file nếu nó đã tồn tại
+    - sử dụng file setting.py
+
+# 8. Fake User-Agent and Brower headers
+Nếu bị block, có thể do ta chưa chỉ định user-agent
+1. Copy User-Agent String trong tab network
+- Bật F12 -> Network tab -> Refesh lại trang để xem những gì mà trình duyệt đã request đến server và response của nó.
+- User-agent: Trình duyệt có vai trò là gì đối với server.
+2. Truy cập trang web và điền chuỗi vừa copy vào
+- Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Mobile Safari/537.36 Edg/132.0.0.0
+- https://useragentstring.com/
+
+2:08:10

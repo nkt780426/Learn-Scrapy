@@ -1,0 +1,20 @@
+services:
+  mysql:
+    image: mysql:8.0
+    hostname: mysql
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: books
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_SSL: 'false'
+      # container tự động khởi tạo lại khi có sự cố
+      # restart: unless-stopped
+    ports:
+      - "3307:3306"
+    volumes:
+      - db_app:/var/lib/mysql
+
+volumes:
+  db_app:
