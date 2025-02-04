@@ -120,7 +120,7 @@ User-agent: Chứa thông tin của trình duyệt, cần phải fake string nà
     # Cài đặt
     pip install scrapyd -y
     # Chạy scrapyd ở chế độ backgroud
-    scrapyd > scraoyd.log 2>&1 &
+    scrapyd > scrapyd.log 2>&1 &
     # Dùng trình duyệt hoặc curl để check
     curl http://localhost:6800/daemonstatus.json
     # Cài scrapyd client cho máy chứa project và up nó lên server.
@@ -131,7 +131,8 @@ User-agent: Chứa thông tin của trình duyệt, cần phải fake string nà
     # Bây giờ project đã được triển khai thành công lên scrapy và sẵn sàng để chạy
     curl http://localhost:6800/schedule.json -d project=bookscraper -d spider=bookspider
     # Dừng scrapyd
-    
+    sudo ss -tunlp (lấy pid và kill nó)
+    kill <pid>
     ```
 
 2. ScrapeOps - Free
@@ -140,3 +141,23 @@ User-agent: Chứa thông tin của trình duyệt, cần phải fake string nà
     - Có khả năng tạo jobs/spider và mornitor
 
 3. ScrapyCloud - Paid
+
+Triển khai scrapydweb
+```sh
+# Trên máy server scrapyd
+git clone --depth 1 https://github.com/nkt780426/Learn-Scrapy.git
+sudo apt install python3.10-venv -y
+python3 -m venv crawl-data
+source crawl-data/bin/activate
+cd cd Learn-Scrapy/
+pip install -r requirements.txt
+
+cd Learn-Scrapy/crawl-data/lib/python3.10/site-packages/scrapyd/
+vi default_scrapyd.conf # Sửa bind_address thành 0.0.0.0 để chấp nhận client từ mọi nơi
+
+# Chạy scrapyd ở chế độ background và ghi log vào file scrapyd.log thay vì in ra terminal
+export SCRAPYD_BIND_ADDRESS=0.0.0.0
+scrapyd > scrapyd.log 2>&1 &
+
+curl http://localhost:6800/schedule.json -d project=bookscraper -d spider=bookspider
+```

@@ -5,3 +5,6 @@ requests
 scrapy-rotating-proxies
 scrapyd
 git+https://github.com/scrapy/scrapyd-client.git
+flash-sqlalchemy
+SQLAlchemy
+Werkzeug
