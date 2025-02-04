@@ -7,19 +7,21 @@ class BookspiderSpider(scrapy.Spider):
     name = "bookspider"
     # Danh sách các domain được phép crawl, trong 1 trang web có thể có rất nhiều liên kết đến rất nhiều các domain khác, kiểm soát nó bằng trường này.
     # Không đặt thì scrapy không bị giới hạn. Nên đặt để tuân thủ robot.txt của website
+    # Có thể là 1 cách để tránh truy cập nhầm vào quảng cáo hay liên kết ngoài
     allowed_domains = ["books.toscrape.com"]
     # Danh sách url bắt đầu thu thập dữ liệu (là url page 0)
     start_urls = ["https://books.toscrape.com"]
 
-    # # Ghi đè cấu hình trong file settings.py, hiển nhiên ở đây có mức độ ưu tiên cao nhất.
-    # custom_settings = {
-    #     'FEEDS': {
-    #         'bookdata.json': {'format': 'json', 'overwrite': True},
-    #     }
-    # }
+    # Ghi đè cấu hình trong file settings.py, hiển nhiên ở đây có mức độ ưu tiên cao nhất.
+    custom_settings = {
+        'FEEDS': {
+            'bookdata.csv': {'format': 'csv', 'overwrite': True},
+        }
+    }
+    
+    
     # Kế thừa scrapy.Spider phải ghi đè, dùng để xử lý phản hồi từ server.
     def parse(self, response):
-        # Extract tất cả các books trong page
         books = response.css('article.product_pod')
         for book in books:
             relative_url = book.css('h3 a ::attr(href)').get()
@@ -29,6 +31,7 @@ class BookspiderSpider(scrapy.Spider):
             else:
                 book_url = "https://books.toscrape.com/" + "catalogue/" + relative_url
                 
+            # yield response.follow(book_url, callback = self.parse_book_page, meta={'proxy': 'http://192.168.56.161:3128'})
             yield response.follow(book_url, callback = self.parse_book_page)
         
         # Nếu hết books, thực hiện di tuyển sang page tiếp theo
@@ -38,9 +41,10 @@ class BookspiderSpider(scrapy.Spider):
                 next_page_url = "https://books.toscrape.com/" + next_page
             else:
                 next_page_url = "https://books.toscrape.com/" + "catalogue/" + next_page
+            # yield response.follow(next_page_url, callback = self.parse, meta={'proxy': 'http://192.168.56.161:3128'})
             yield response.follow(next_page_url, callback = self.parse)
     
-    # Extract dữ liệu từng book  
+    # Extract dữ liệu từng book
     def parse_book_page(self, response):
         # Lặp qua table
         table_rows = response.css('table tr')
@@ -63,3 +67,4 @@ class BookspiderSpider(scrapy.Spider):
         book_item['price'] = response.css("p.price_color ::text").get()
         
         yield book_item
+        

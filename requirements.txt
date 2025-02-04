@@ -1,3 +1,7 @@
 scrapy
 ipython
 mysql-connector-python
+requests
+scrapy-rotating-proxies
+scrapyd
+git+https://github.com/scrapy/scrapyd-client.git

@@ -66,12 +66,77 @@ Truy cập vào scrapy shell bằng lệnh scrapy shell (có thể thay shell m�
     - sử dụng file setting.py
 
 # 8. Fake User-Agent and Brower headers
-Nếu bị block, có thể do ta chưa chỉ định user-agent
-1. Copy User-Agent String trong tab network
-- Bật F12 -> Network tab -> Refesh lại trang để xem những gì mà trình duyệt đã request đến server và response của nó.
-- User-agent: Trình duyệt có vai trò là gì đối với server.
-2. Truy cập trang web và điền chuỗi vừa copy vào
-- Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Mobile Safari/537.36 Edg/132.0.0.0
-- https://useragentstring.com/
+Mục đích: làm cho con bot giống như đang sử dụng trình duyệt thật
+User-agent: Chứa thông tin của trình duyệt, cần phải fake string này trong header của request để giả dạng trình duyệt thật. 
+1. Sử dụng 1 trình duyệt với mọi request (không khuyến khích vì có thể bị chặn)
+    - Copy User-Agent String trong tab network: Bật F12 -> Network tab -> Refesh lại trang để xem những gì mà trình duyệt đã request đến server và response của nó, đọc header và lấy
+    - Để đọc được thông tin từ chuỗi, truy cập trang web [sau](https://useragentstring.com/) và điền User-Agent vào
+2. Fake 1 user-agent mỡi mỗi request
+    - Ý tưởng tạo 1 list user/agent và loop qua nó
+    - Với các trang web lớn, cần phải tạo list có hàng ngàn user-agent. Hoặc sư dụng Fake User Agent API (chỉ định trong file middlewares.py)
+    - [API generator User-Agent](https://scrapeops.io/?fpr=lucas37&gad_source=1&gclid=CjwKCAiAzPy8BhBoEiwAbnM9O-yfrcSfS-0rgtjGz8fmFBTEUaem4rH0MVKA6jfvCX9qKh5MLY7j6hoCpD0QAvD_BwE): Cần phải tạo tài khoản (vohoang.w2002), scrapy cung cấp free
+3. Fake toàn bộ header
+    - Fake user-agent là không đủ với các trang web lớn như google, amazon, ... cần phải fake toàn bộ request header cho phù hợp với broswer.
+    - Sử dụng link api trên có thể làm được
 
-2:08:10
+# 9. Proxy
+0. Các trang web proxy free 
+    - https://geonode.com/free-proxy-list
+    - https://free-proxy-list.net/
+1. Cho mục đích học tập, tạo máy ảo:
+    - Forward Proxy (proxy thuận - đại diện cho client): là máy chủ trung gian giữa client và internet. Có trách nhiệm thay mặt client gửi request đến bất kỳ đâu trong internet (router bgp chẳng hạn hay vpn). Tác dụng, che dấú ip của client (t,hường ip client là private IP thông qua bgp nên cũng chẳng cần che dấu :v), kiểm soát truy cập, lọc nội dung, caching tăng tốc độ truy cập.
+    ```sh
+        sudo apt install squid -y
+        sudo vi /etc/squid/squid.conf
+        
+        # acl localnet src 192.168.56.0/24   (cho phép các máy thuộc dải mạng trên sử dụng proxy)
+        # http_access allow localnet
+        sudo systemctl restart squid
+
+        # Test local, mặc định squid chỉ hỗ trợ http, cấu hình https phải thiết lập thêm
+        curl -x http://192.168.56.161:3128 -I https://facebook.com
+    ```
+    - Reverse Proxy (proxy ngược - đại diện cho server): là máy chủ trung gian trong trình duyệt web. Nằm giữa client và các server backend (che dấu được ip server backend) và chuyển tiếp request của client đến server backend phù hợp (cân bằng tải giữa các server backend). Tác dụng cân bằng tải, bảo mật, caching, ssl termination (giải mã SSL/TTS thay cho server backend).
+    - Residential Proxies: 
+2. Uptime là thời gian mà một dịch vụ (như proxy) hoạt động liên tục mà không bị gián đoạn. Ví dụ, nếu một proxy có uptime 99%, điều đó có nghĩa là trong 100 giờ, proxy đó có thể sẽ ngừng hoạt động 1 giờ. Uptime càng cao thì proxy càng đáng tin cậy và ít bị gián đoạn.
+3. Sử dụng project của scrapy
+    pip install scrapy-rotating-proxies
+4. Phương pháp 1: Liệt kê các proxy vào file setting.py
+5. Phương pháp 2: Liệt kê các proxy vào file proxies.txt và thêm đường dẫn của đến file đó vào file setting.py
+6. Phương pháp 3: Sử dụng service cung cấp ip và port của proxy hoạt động
+    - 2 phương pháp trên đêù có nhược điểm là scrapy phải check từng proxies hoạt động hay ko. Lúc nào cũng phải lo lắng về danh sách các proxies xem nó có bị đổi ip hay ko, ...
+    - service này được cung cấp bởi proxy provider và nó mất phí
+    - Khi mua cần phải chú ý location. Hầu hết các trang web sẽ hoạt động khác nhau khi ở location khác nhau.
+
+Đi xa hơn, sử dụng service có phí của scrape ops, proxy tự động cung cấp dữ liệu trang web mà ko cần phải fake user-agent hay sử dụng proxy bên thứ 3 nữa. Vẫn tài khoản đó trong scrape ops, đi vào phần proxy và xem video từ
+
+# 10. Run spiders in cloud with scrapyd
+1. Scrapyd - Free open source tool để chạy nhiều spider trên một máy chủ từ xa. 
+    - Là 1 thư viện python, cần server tự tạo để chạy
+    - Chỉ cung cấp api để thao tác, giao diện có thể tùy chỉnh thông qua phần mềm của bên thứ 3.
+    - no scheduler
+    - Cách sử dụng
+    ```sh
+    # Cài đặt
+    pip install scrapyd -y
+    # Chạy scrapyd ở chế độ backgroud
+    scrapyd > scraoyd.log 2>&1 &
+    # Dùng trình duyệt hoặc curl để check
+    curl http://localhost:6800/daemonstatus.json
+    # Cài scrapyd client cho máy chứa project và up nó lên server.
+    pip install git+https://github.com/scrapy/scrapyd-client.git
+    # Điều chỉnh trong file scrapy.cfg để chứa url của server (default là project name trong scrapyd)
+    scrapy-deploy default
+    # Project sẽ tự sinh ra các thư mục như build, project.egg-info
+    # Bây giờ project đã được triển khai thành công lên scrapy và sẵn sàng để chạy
+    curl http://localhost:6800/schedule.json -d project=bookscraper -d spider=bookspider
+    # Dừng scrapyd
+    
+    ```
+
+2. ScrapeOps - Free
+    - Cần có server riêng tự tạo và cài scrapyd
+    - Có UI
+    - Có khả năng tạo jobs/spider và mornitor
+
+3. ScrapyCloud - Paid

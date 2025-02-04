@@ -12,14 +12,28 @@ BOT_NAME = "bookscraper"
 SPIDER_MODULES = ["bookscraper.spiders"]
 NEWSPIDER_MODULE = "bookscraper.spiders"
 
+# USER_AGENT = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36 Edg/131.0.0.0'
+SCRAPEOPS_API_KEY = '424ce994-7712-44b0-8b56-f19d8d1ec720'
+SCRAPEOPS_FAKE_USER_AGENT_ENDPOINT = 'https://headers.scrapeops.io/v1/browser-headers'
+SCRAPEOPS_FAKE_USER_AGENT_ENABLED = True  
+SCRAPEOPS_NUM_RESULTS = 50
+
 # FEEDS = {
 #    'bookdata.json': {'format': 'json'}
 # }
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = "bookscraper (+http://www.yourdomain.com)"
 
+LOG_LEVEL = 'INFO'
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
+
+# ROTATING_PROXY_LIST = [
+#    '192.168.56.161:3128',
+#    '192.168.56.162:3128',
+# ]
+
+ROTATING_PROXY_LIST_PATH = 'proxies.txt'
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 #CONCURRENT_REQUESTS = 32
@@ -52,9 +66,14 @@ ROBOTSTXT_OBEY = True
 
 # Enable or disable downloader middlewares
 # See https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
-#DOWNLOADER_MIDDLEWARES = {
-#    "bookscraper.middlewares.BookscraperDownloaderMiddleware": 543,
-#}
+DOWNLOADER_MIDDLEWARES = {
+   'bookscraper.middlewares.ScrapeOpsFakeBrowserHeaderAgentMiddleware': 400,
+   'bookscraper.middlewares.BookscraperDownloaderMiddleware': 543,
+   # Xoay vòng các proxy khi gửi request để tránh bị chặn khi gửi request. Mỗi request được gán ngẫu nhiên 1 request
+   'rotating_proxies.middlewares.RotatingProxyMiddleware': 610,
+   # Giúp phát hiện các proxy bị chặn và yêu cầu scrapy thử lại với proxy khác (như reponse trả về Access Denied, CAPTCHA)
+   'rotating_proxies.middlewares.BanDetectionMiddleware': 620,
+}
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
@@ -66,7 +85,7 @@ ROBOTSTXT_OBEY = True
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
    "bookscraper.pipelines.BookscraperPipeline": 300,
-   "bookscraper.pipelines.SaveToMySQLPipeline": 500,
+   # "bookscraper.pipelines.SaveToMySQLPipeline": 500,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
