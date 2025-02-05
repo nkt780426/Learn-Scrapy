@@ -142,7 +142,7 @@ User-agent: Chứa thông tin của trình duyệt, cần phải fake string nà
 
 3. ScrapyCloud - Paid
 
-Triển khai scrapydweb
+Triển khai scrapyd
 ```sh
 # Trên máy server scrapyd
 git clone --depth 1 https://github.com/nkt780426/Learn-Scrapy.git
@@ -159,5 +159,118 @@ vi default_scrapyd.conf # Sửa bind_address thành 0.0.0.0 để chấp nhận 
 export SCRAPYD_BIND_ADDRESS=0.0.0.0
 scrapyd > scrapyd.log 2>&1 &
 
-curl http://localhost:6800/schedule.json -d project=bookscraper -d spider=bookspider
+# Kiểm tra status của scrapyd server từ máy client
+(base) user3t@LAP027:~$ curl http://192.168.56.160:6800/daemonstatus.json
+{"pending": 0, "running": 0, "finished": 0, "status": "ok", "node_name": "scrapyd"} # Không có job nào pedding, running, finished
+
+# Package spider và up lên srapyd server
+# Chỉnh url của server trong file scrapy.cfg
+# Theo mặc định scrapy chỉ đóng gói các tệp scrapy lên server. Muốn nó có thêm file proxies.txt cần phải config trong setup.py
+# Push spider lên server (như git)
+scrapyd-deploy default
+(craw_data) (base) user3t@LAP027:~/Workspace/projects/in-process/scrapy/bookscraper$ scrapyd-deploy default
+Packing version 1738723310
+Deploying to project "bookscraper" in http://192.168.56.160:6800/addversion.json
+Server response (200):
+{"project": "bookscraper", "version": "1738723310", "spiders": 1, "status": "ok", "node_name": "scrapyd"} # Project name, version push, số lượng spider trong project, status push, hostnamectl của server.
+# Scheduler spider
+curl http://192.168.56.160:6800/schedule.json -d project=bookscraper -d spider=bookspider
+# Kiểm tra job có chạy ko
+curl http://192.168.56.160:6800/listjobs.json?project=bookscraper
+# Kiểm tra log
+curl http://192.168.56.160:6800/logs/bookscraper/bookspider/af830432e36c11efaf13a10e0aa0ee42.log
 ```
+Triển khai scrapydweb
+```sh
+pip install -r requirements.txt
+# Lần đầu tiên chạy sẽ sinh ra file scrapydweb_settings_v10.py ở ~
+scrapydweb
+# Điều chỉnh cấu hình thành
+SCRAPYD_SERVERS = [
+    '127.0.0.1:6800'
+]
+ENABLE_LOGPARSER = True 
+LOCAL_SCRAPYD_SERVER = '127.0.0.1:6800'
+LOCAL_SCRAPYD_LOGS_DIR = '/home/vohoang/scrapyd/logs'
+# Dừng scrapyd và start lại
+mkdir scrapyd
+cd scrapyd 
+scrapyd > scrapyd.log 2>&1 &
+# Chạy lại và tận hưởng ở port 5000 (flask)
+scrapydweb > scrapydweb.log 2>&1 &
+```
+
+# 13. Recap
+1. Các vấn đề còn tồn đọng
+    - dynamic website: nội dung sinh ra chỉ khi di chuyển view, front-end framework chỉ hiển thị 1 phần thông tin (1 page) mà server gửi. Do đó nếu sử dụng url từ website này sẽ không nhận được data. => Scrapy pupeteer hoặc scrapy selenium
+```sh
+# dùng để thu thập dữ liệu từ các trang web sử dụng JavaScript động như SPA - Single Page Application. Puppeteer giúp render hoàn chỉnh trang web giúp scrapy lấy được dữ liệu sau khi JS chạy xong
+pip install scrapy-puppeteer
+# Thêm middleware vào puppeteer
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy_puppeteer.middleware.PuppeteerMiddleware': 800,
+}
+# Tạo spider
+import scrapy
+from scrapy_puppeteer import PuppeteerRequest
+
+class MySpider(scrapy.Spider):
+    name = 'myspider'
+    start_urls = ['https://example.com']
+
+    async def parse(self, response):
+        yield PuppeteerRequest(
+            url='https://example.com',
+            callback=self.parse_result
+        )
+
+    async def parse_result(self, response):
+        title = response.css('title::text').get()
+        yield {'title': title}
+# Dùng khi trang web sử dụng nhiều js để tải nội dung hay ko thể lấy được dữ liệu vì nội dung không có trong html ban đầu, cần tương tác với trang web như click, scroll, điền form, ...
+# Nếu chỉ cần lấy dữ liệu từ API ẩn trong trang thì có thể thử Scrapy + request vì puppeteer chậm hơn.
+```
+```sh
+# scrapy-selenium cũng là middleware hỗ trợ crawl dynamic web
+# selenium sử dụng webdriver thay vì puppeteer
+# Dùng khi cần tương tác với web như click, scroll, điền form, đăng nhập, ...
+pip install scrapy-selenium
+# Cài thêm web driver nữa
+DOWNLOADER_MIDDLEWARES = {
+    'scrapy_selenium.SeleniumMiddleware': 800
+}
+
+SELENIUM_DRIVER_NAME = 'chrome'  # Hoặc 'firefox'
+SELENIUM_DRIVER_EXECUTABLE_PATH = '/path/to/chromedriver'  # Đường dẫn đến WebDriver
+SELENIUM_DRIVER_ARGUMENTS=['--headless']  # Chạy không hiển thị trình duyệt
+# Ví dụ đơn giản
+import scrapy
+from scrapy_selenium import SeleniumRequest
+
+class MySpider(scrapy.Spider):
+    name = "my_spider"
+
+    def start_requests(self):
+        yield SeleniumRequest(
+            url="https://example.com",
+            callback=self.parse
+        )
+
+    def parse(self, response):
+        title = response.css('title::text').get()
+        yield {"title": title}
+```
+
+| 🛠 Công cụ         | 🌍 Trình duyệt                  | 🚀 Hiệu suất  | 🔧 Khi nào nên dùng?                                      |
+|-------------------|--------------------------------|--------------|------------------------------------------------------|
+| **Scrapy-Selenium**  | Chrome, Firefox, Edge, Safari... | Chậm hơn     | Khi cần tương tác với trang web (click, form...)     |
+| **Scrapy-Puppeteer** | Chỉ hỗ trợ Chrome/Chromium    | Nhanh hơn    | Khi chỉ cần render JavaScript mà không cần nhiều tương tác |
+
+Sử dụng 2 công cụ trên sẽ chạy với headless broswer (không cần ui)
+
+2. Login endpoint
+3. Scale scrape (nếu phải cào 1000 page 1 ngày thì sao)
+    - Sử dụng database để lưu các url cần xử lý, sau đó dùng nhiều server
+
+Đọc link mà khóa học recommend. scrapy-playwright đã thay thế scrapy-ppuppeteer
+https://thepythonscrapyplaybook.com/freecodecamp-beginner-course/freecodecamp-scrapy-beginners-course-part-13-next-steps/
