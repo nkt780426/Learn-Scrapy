@@ -4,6 +4,9 @@ mysql-connector-python
 requests
 scrapy-rotating-proxies
 scrapyd
-git+https://github.com/scrapy/scrapyd-client.git
-git+https://github.com/my8100/scrapydweb.git
+# git+https://github.com/scrapy/scrapyd-client.git
+# git+https://github.com/my8100/scrapydweb.git
 logparser
+scrapy-user-agents
+scrapy-playwright
+scrapy-splash

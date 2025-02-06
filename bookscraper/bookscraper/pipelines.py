@@ -7,7 +7,7 @@
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 
-
+# Dùng file itemloader.py để xử lý thay vì dùng hàm ở đây cũng là giải pháp
 class BookscraperPipeline:
 
     def process_item(self, item, spider):

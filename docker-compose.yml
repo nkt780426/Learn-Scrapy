@@ -15,6 +15,11 @@ services:
       - "3307:3306"
     volumes:
       - db_app:/var/lib/mysql
+  splash:
+    image: scrapinghub/splash
+    container_name: splash
+    ports:
+      - "8050:8050"
 
 volumes:
   db_app:
