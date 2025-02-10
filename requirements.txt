@@ -10,3 +10,4 @@ logparser
 scrapy-user-agents
 scrapy-playwright
 scrapy-splash
+scrapy-redis

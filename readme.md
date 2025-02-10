@@ -421,3 +421,34 @@ Không dùng splash, nó không phù hợp để xử lý trang web có js phứ
 
 ## Method 1: SimpleFormRequest
 1. Trong form đăng nhập có trường csrf_token được ẩn, là access token. Sau đó là 2 trường user, password
+
+# Khóa học scrapy scale
+
+## Nguồn
+- doc: https://scrapeops.io/python-scrapy-playbook/scrapy-redis/
+- youtube: https://www.youtube.com/watch?v=ZoosqkROKOI
+## Tại sao sử dụng scrapy-redis
+- Scalable: Giảm thời gian, chi phí crawl dữ liệu
+- Reliable: Khi spider bị lỗi, có thể start 1 worker khác bắt đầu từ url bị lỗi trên redis
+- Seperated data processing: dễ dàng phân tách data processing pipeline cho các worker và scraping process.
+- Syncronizing large crawls: làm việc đa nhiệm với nhiều spider cùng 1 lúc.
+## Kiến trúc phân tán
+![](images/scrapy-redis.png)
+
+Redis chứa các url cần crawls, vai trò như 1 broker sử dụng giao thức MQTT.
+## Kiến trúc phân tán boardcrawl
+boardcrawl: thu thập trên diện rộng, nhiều website cùng 1 lúc.
+- Vấn đề: lượng dữ liệu lớn và khó chia nhỏ ngay từ đầu, scrapping job có thể tiêu thụ nhiều tài nguyên, khó scale
+- Scrapy-redis hoạt động: 
+    - các crawler cùng chia sẻ một hàng đợi redis
+    - url mới phát hiện được đẩy vào queue chung
+    - các crawler lấy url từ queur để xử lý, tránh bị trùng lặp.
+    - nếu 1 crawler bị crash thì công việc có thể tiếp tục mà ko mất dữ liệu.
+## Seperated Data Processing architech
+Khi scraping large scale, nên tách quá trình trích xuất HTML với quá trình xử lý data (item và pipeline). Điều này giúp mở rộng quy mô thu  thập dữ liệu độc lập với nhau và giúp mỗi hệ thống có khả năng chịu lỗi tốt hơn.
+Lúc này có thể phân tán 2 lần: lần 1 đọc url từ queue 1 và đẩy queue 2, lần 2 đọc queue 2 và xử lý dữ liệu lưu vào DB.
+![](images/scrapy-redis2.png)
+
+## Thực hành
+- RedisSpider: lấy URL từ Redis và gọi parse() để xử lý
+- RedisCrawlSpider: sử dụng rules để thu thập các liên kết theo mẫu, dùng khi url cần truy cập có cấu trúc rõ ràng.
