@@ -17,6 +17,8 @@ DOWNLOAD_HANDLERS = {
     "https": "scrapy_playwright.handler.ScrapyPlaywrightDownloadHandler",
 }
 
+## TWISTED là 1 reactor (trình xử lý sự kiện - framwork lập trình mạng bất đồng bộ phổ biến cho Python). 
+## Thao tác này giúp chạy các tác vụ bất đồng bộ một cách hiệu quả, đặc biệt với ứng dụng cần xử lý nhiều kết nối đồng thời nhử crawing, streaming, proxy server, hoặc các API xử lý dữ liệu lớn.
 TWISTED_REACTOR = "twisted.internet.asyncioreactor.AsyncioSelectorReactor"
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent

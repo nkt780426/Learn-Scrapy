@@ -5,21 +5,40 @@ https://www.youtube.com/watch?v=mBoX_JCKZTE
 
 ## Tạo project scrapy
 
-scrapy startproject <tên> => Tạo folder mới.
+```sh
+scrapy startproject web_crawler
+cd web_crawler
+scrapy genspider <tên spider> <tên domain: doanhnhansaigon.vn>
 
-VD: scrapy startproject example
+web_crawler/
+├── scrapy.cfg
+├── README.md
+├── .env
+└── web_crawler/
+    ├── __init__.py
+    ├── items.py
+    ├── loaders.py                  # Định nghĩa các item loader dể xử lý dữ liệu crawl trước khi vào loader.
+    ├── middlewares/                # Viết các hàm middleware tùy chỉnh nếu có (proxy, retry, ...)
+    │   └── custom_proxy.py
+    ├── pipelines/                  # Viết các pipeline xử lý nâng cao như lưu vào db, xuất CSV, xử lý ảnh.
+    │   └── export_to_minio.py
+    ├── parsers/                    # folder này thường được tạo ra để tách các hàm phân tích html/xml phức tạp ra khỏi file spider chính.
+    │   └── product_parser.py
+    ├── jobs/                       # dùng khi muốn chạy folder theo kiểu checkpoint với tùy chọn -s JOBDIR=....
+    │   └── jobs.py
+    ├── tests/                      # Viết unit test cho hàm xử lý HTML hoặc logic crawl.
+    │   └── unit.py
+    ├── logs/                       # Lưu lại log tiến trình
+    │   └── app.logs
+    ├── utils.py                    # Chứa các hàm tiện ích như: xử lý ngày tháng, làm sạch dữ liệu, decode HTML,...
+    ├── constants.py                # Khai báo các hằng số dùng chung như headers, base URLs, regex pattern,...
+    ├── validators.py               # Kiểm tra tính hợp lệ của dữ liệu trước khi vào db
+    ├── settings.py
+    └── spiders/
+        └── my_spider.py
 
-spiders: Chứa các spider.
-middlewares files: Là các file cùng cấp với thư mục spiders (thường bỏ qua). Tuy nhiên file pipeline có thể được sử dụng 
-    - settings.py: chứa các setting của project như kích hoạt pipelines, middlewares, thời gian delay, concurrency (đồng thời), robot.txt (cấu hình scrapy)
-    - items.py: model để extract data (Các class entity)
-    - pipelines.py: Thiết kế pipelines từ nguồn về đích (xử lý dữ liệu sau crawl)
-    - middlewares.py: hữu dụng để thực hiện sửa đổi request và cách  scarpy chỉnh sửa reponse https
-        time_out_request
-        header muốn gửi: user agents
-        manage_cookie_cache: 
-    - scrapy.cfg: cấu hình scrapy
-
+scrapy crawl <my_spider>
+```
 Có 2 loại middlewares: downloader middlewares (thường hay được sử dụng), spider middlewares. Chọn cái nào thì chỉnh trong setting.py
 
 ## Thuật ngữ
@@ -30,11 +49,9 @@ Có 2 loại middlewares: downloader middlewares (thường hay được sử d�
 
 2. site = website
 
-## Tạo spider
-cd bookscraper
-scrapy genspider bookspider books.toscrape.com
-
-Truy cập vào scrapy shell bằng lệnh scrapy shell (có thể thay shell mặc định bằng ipython - nhân jupyter)
+## Kỹ năng debug
+Truy cập vào scrapy shell bằng lệnh scrapy shell (có thể thay shell mặc định bằng ipython - như jupyter)
+Nếu dùng scrapy redis thì khi debug cần bỏ đoạn item pipeline đi để có thể cào tốt hơn.
 
 ## Lệnh
 1. scrapy list: liệt kê các spider
